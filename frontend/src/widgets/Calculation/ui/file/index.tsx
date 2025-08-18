@@ -13,6 +13,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+// import Papa from 'papaparse';
+
 
 export function Dropzone() {
   const files = useStore(state => state.calculationSlice.files)
@@ -22,6 +24,10 @@ export function Dropzone() {
 
   const onDrop = (acceptedFiles: File[]) => {
     console.log(acceptedFiles)
+    console.log(acceptedFiles[0].text().then(text => {
+      console.log('text: ', text)
+    }))
+
     addFiles(
       acceptedFiles.map(({ name, size, lastModified }) => ({
         name,
