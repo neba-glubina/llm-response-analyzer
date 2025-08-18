@@ -5,10 +5,19 @@ type BaseFile = Pick<File, 'name' | 'size' | 'lastModified'>
 
 type SingleFile = { readonly id: string } & BaseFile
 
+type BaseAI = {
+  readonly value: string
+  readonly label: string
+}
+
 export type FileStore = {
-  fileSlice: {
+  calculationSlice: {
+    ais: Record<BaseAI['value'], BaseAI> | null
+    updateAIs: (ai: BaseAI) => void
     strategy: 'append' | 'replace' | 'merge'
-    updateStrategy: (strategy: FileStore['fileSlice']['strategy']) => void
+    updateStrategy: (
+      strategy: FileStore['calculationSlice']['strategy'],
+    ) => void
     files: Record<SingleFile['id'], SingleFile> | null
     /**
      * @description
@@ -24,29 +33,39 @@ export type FileStore = {
 }
 
 export const fileSlice = createSlice<FileStore>(set => ({
-  fileSlice: {
+  calculationSlice: {
+    ais: null,
+    updateAIs: ai =>
+      set(state => {
+        if (!state.calculationSlice.ais) state.calculationSlice.ais = {}
+        if (state.calculationSlice.ais[ai.value]) {
+          delete state.calculationSlice.ais[ai.value]
+        } else {
+          state.calculationSlice.ais[ai.value] = ai
+        }
+      }),
     strategy: 'merge',
     updateStrategy: strategy =>
       set(state => {
-        state.fileSlice.strategy = strategy
+        state.calculationSlice.strategy = strategy
       }),
     files: null,
     addFiles: files =>
       set(state => {
-        if (!state.fileSlice.files) state.fileSlice.files = {}
+        if (!state.calculationSlice.files) state.calculationSlice.files = {}
 
-        switch (state.fileSlice.strategy) {
+        switch (state.calculationSlice.strategy) {
           case 'append':
             for (const file of files) {
               const fileId = getFileIdFromFileName(file.name)
-              if (state.fileSlice.files[fileId]) continue
-              state.fileSlice.files[fileId] = { ...file, id: fileId }
+              if (state.calculationSlice.files[fileId]) continue
+              state.calculationSlice.files[fileId] = { ...file, id: fileId }
             }
             break
           case 'replace':
             for (const file of files) {
               const fileId = getFileIdFromFileName(file.name)
-              state.fileSlice.files[fileId] = { ...file, id: fileId }
+              state.calculationSlice.files[fileId] = { ...file, id: fileId }
             }
             break
           case 'merge':
@@ -56,7 +75,7 @@ export const fileSlice = createSlice<FileStore>(set => ({
               let newFileName = file.name
               let newFileId = fileId
               let counter = 1
-              while (state.fileSlice.files[newFileId]) {
+              while (state.calculationSlice.files[newFileId]) {
                 const fileSuffix = `-${counter}`
                 const fileNameWithoutExtension = file.name.replace(
                   /\.[^/.]+$/,
@@ -72,7 +91,7 @@ export const fileSlice = createSlice<FileStore>(set => ({
                 newFileName = `${fileNameWithoutExtension}${fileSuffix}${fileExtension}`
                 counter++
               }
-              state.fileSlice.files[newFileId] = {
+              state.calculationSlice.files[newFileId] = {
                 ...file,
                 id: newFileId,
                 name: newFileName,
@@ -80,19 +99,21 @@ export const fileSlice = createSlice<FileStore>(set => ({
             }
             break
           default:
-            throw new Error(`Unknown strategy: ${state.fileSlice.strategy}`)
+            throw new Error(
+              `Unknown strategy: ${state.calculationSlice.strategy}`,
+            )
         }
       }),
     removeFile: fileName =>
       set(state => {
-        if (state.fileSlice.files === null) return
+        if (state.calculationSlice.files === null) return
         const fileId = getFileIdFromFileName(fileName)
-        if (!state.fileSlice.files[fileId]) return
-        delete state.fileSlice.files[fileId]
+        if (!state.calculationSlice.files[fileId]) return
+        delete state.calculationSlice.files[fileId]
       }),
     removeFiles: () =>
       set(state => {
-        state.fileSlice.files = null
+        state.calculationSlice.files = null
       }),
   },
 }))

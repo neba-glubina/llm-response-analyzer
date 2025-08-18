@@ -6,7 +6,7 @@ import { devtools, persist, createJSONStorage } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 import packageJson from '@/../package.json'
 import type { Store } from '@/store/model'
-import { fileSlice } from '@/widgets/Calculation/ui/file/store'
+import { fileSlice } from '@/widgets/Calculation/store'
 
 export const createStore = () => {
   return createZustandVanillaStore<Store>()(

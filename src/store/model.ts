@@ -1,5 +1,5 @@
 import type { StateCreator } from 'zustand/vanilla'
-import type { FileStore } from '../widgets/Calculation/ui/file/store'
+import type { FileStore } from '../widgets/Calculation/store'
 
 export type Store = FileStore
 

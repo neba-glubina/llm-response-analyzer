@@ -27,7 +27,7 @@ const STRATEGIES = {
       'Файлы будут добавлены к уже существующим. Если файл с таким именем уже существует, он будет добавлен с новым именем (например, "file.txt" -> "file-1.txt" и т.д.)',
   },
 } as const satisfies {
-  [key in Store['fileSlice']['strategy']]: {
+  [key in Store['calculationSlice']['strategy']]: {
     description: string
     label: string
   }
@@ -36,8 +36,10 @@ const STRATEGIES = {
 const STRATEGIES_KEYS = objectKeys(STRATEGIES)
 
 export const Strategy = () => {
-  const strategy = useStore(state => state.fileSlice.strategy)
-  const updateStrategy = useStore(state => state.fileSlice.updateStrategy)
+  const strategy = useStore(state => state.calculationSlice.strategy)
+  const updateStrategy = useStore(
+    state => state.calculationSlice.updateStrategy,
+  )
 
   return (
     <div className='flex justify-between items-center gap-2'>

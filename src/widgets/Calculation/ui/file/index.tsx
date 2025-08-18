@@ -15,10 +15,10 @@ import {
 } from '@/components/ui/alert-dialog'
 
 export function Dropzone() {
-  const files = useStore(state => state.fileSlice.files)
-  const addFiles = useStore(state => state.fileSlice.addFiles)
-  const removeFile = useStore(state => state.fileSlice.removeFile)
-  const removeFiles = useStore(state => state.fileSlice.removeFiles)
+  const files = useStore(state => state.calculationSlice.files)
+  const addFiles = useStore(state => state.calculationSlice.addFiles)
+  const removeFile = useStore(state => state.calculationSlice.removeFile)
+  const removeFiles = useStore(state => state.calculationSlice.removeFiles)
 
   const onDrop = (acceptedFiles: File[]) => {
     console.log(acceptedFiles)
