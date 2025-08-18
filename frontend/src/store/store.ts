@@ -21,8 +21,7 @@ export const createStore = () => {
             process.env.NODE_ENV === 'development' ||
             typeof window === 'undefined'
               ? undefined
-              : // : createJSONStorage(() => sessionStorage),
-                createJSONStorage(() => sessionStorage),
+              : createJSONStorage(() => sessionStorage),
           // partialize: (state) =>
           //   Object.fromEntries(
           //     Object.entries(state).filter(
