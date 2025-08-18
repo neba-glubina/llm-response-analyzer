@@ -15,26 +15,22 @@ import {
 } from '@/components/ui/alert-dialog'
 // import Papa from 'papaparse';
 
-
 export function Dropzone() {
   const files = useStore(state => state.calculationSlice.files)
   const addFiles = useStore(state => state.calculationSlice.addFiles)
   const removeFile = useStore(state => state.calculationSlice.removeFile)
   const removeFiles = useStore(state => state.calculationSlice.removeFiles)
 
-  const onDrop = (acceptedFiles: File[]) => {
-    console.log(acceptedFiles)
-    console.log(acceptedFiles[0].text().then(text => {
-      console.log('text: ', text)
-    }))
-
-    addFiles(
+  const onDrop = async (acceptedFiles: File[]) => {
+    const parsedFiles = await Promise.all(
       acceptedFiles.map(({ name, size, lastModified }) => ({
         name,
         size,
         lastModified,
       })),
     )
+
+    addFiles(parsedFiles)
     return true
   }
 
