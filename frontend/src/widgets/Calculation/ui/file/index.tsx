@@ -13,7 +13,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-// import Papa from 'papaparse';
+import Papa from 'papaparse'
 
 export function Dropzone() {
   const files = useStore(state => state.calculationSlice.files)
@@ -23,14 +23,19 @@ export function Dropzone() {
 
   const onDrop = async (acceptedFiles: File[]) => {
     const parsedFiles = await Promise.all(
-      acceptedFiles.map(({ name, size, lastModified }) => ({
-        name,
-        size,
-        lastModified,
-      })),
+      acceptedFiles.map(file => file.text()),
     )
 
-    addFiles(parsedFiles)
+    const files = acceptedFiles.map(({ name, size, lastModified }, index) => ({
+      name,
+      size,
+      lastModified,
+      content: Papa.parse(parsedFiles[index])
+        .data.map(row => (Array.isArray(row) ? row[0] || '' : ''))
+        .filter(Boolean),
+    }))
+
+    addFiles(files)
     return true
   }
 
@@ -57,7 +62,18 @@ export function Dropzone() {
       {filesArray.length > 0 && (
         <div className='mt-4'>
           <div className='flex justify-between items-center'>
-            <p className='text-muted-foreground text-sm'>Выбранные файлы:</p>
+            <p className='text-muted-foreground text-sm'>
+              Выбранные файлы{' '}
+              <span className='text-muted-foreground text-xs'>
+                (
+                {filesArray.reduce(
+                  (total, { content }) => total + content.length,
+                  0,
+                )}{' '}
+                запросов)
+              </span>
+              :
+            </p>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button
@@ -90,7 +106,12 @@ export function Dropzone() {
               <li
                 key={file.name}
                 className='flex flex-wrap justify-between items-center gap-2'>
-                <span>{file.name}</span>
+                <p>
+                  {file.name}{' '}
+                  <span className='text-muted-foreground text-xs'>
+                    ({file.content.length})
+                  </span>
+                </p>
                 <Button
                   onClick={() => removeFile(file.name)}
                   variant='ghost'

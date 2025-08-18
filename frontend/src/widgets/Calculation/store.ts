@@ -1,7 +1,10 @@
 import { createSlice } from '@/store/utils'
 import slugify from 'slugify'
 
-type BaseFile = Pick<File, 'name' | 'size' | 'lastModified'>
+type BaseFile = { readonly content: string[] } & Pick<
+  File,
+  'name' | 'size' | 'lastModified'
+>
 
 type SingleFile = { readonly id: string } & BaseFile
 
