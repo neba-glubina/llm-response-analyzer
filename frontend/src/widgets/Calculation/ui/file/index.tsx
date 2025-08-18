@@ -61,7 +61,7 @@ export function Dropzone() {
       </div>
       {filesArray.length > 0 && (
         <div className='mt-4'>
-          <div className='flex justify-between items-center'>
+          <div className='flex justify-between items-center mb-1'>
             <p className='text-muted-foreground text-sm'>
               Выбранные файлы{' '}
               <span className='text-muted-foreground text-xs'>
@@ -101,7 +101,7 @@ export function Dropzone() {
               </AlertDialogContent>
             </AlertDialog>
           </div>
-          <ul className='flex flex-col gap-2 p-0'>
+          <ul className='flex flex-col gap-1 p-0'>
             {filesArray.map(file => (
               <li
                 key={file.name}
