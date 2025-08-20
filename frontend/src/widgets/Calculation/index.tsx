@@ -10,8 +10,11 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Strategy } from './ui/strategy'
+import { useCalculation } from './api'
 
 export const Calculation = () => {
+  const { triggerCalculation } = useCalculation()
+
   return (
     <Card>
       <CardHeader>
@@ -24,7 +27,7 @@ export const Calculation = () => {
         <Dropzone />
       </CardContent>
       <CardFooter className='flex justify-between items-center gap-2'>
-        <Button>Отправить</Button>
+        <Button onClick={triggerCalculation}>Отправить</Button>
         <AiSelectList />
       </CardFooter>
     </Card>
