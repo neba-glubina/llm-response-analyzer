@@ -11,9 +11,11 @@ import {
 } from '@/components/ui/card'
 import { Strategy } from './ui/strategy'
 import { useCalculation } from './api'
+import { LoaderIcon } from 'lucide-react'
 
 export const Calculation = () => {
-  const { triggerCalculation } = useCalculation()
+  const { triggerCalculation, calculationIsLoading, calculationError } =
+    useCalculation()
 
   return (
     <Card>
@@ -27,7 +29,24 @@ export const Calculation = () => {
         <Dropzone />
       </CardContent>
       <CardFooter className='flex justify-between items-center gap-2'>
-        <Button onClick={triggerCalculation}>Отправить</Button>
+        <div>
+          <Button onClick={triggerCalculation} disabled={calculationIsLoading}>
+            {calculationIsLoading ? (
+              <>
+                <LoaderIcon /> Отправляется...
+              </>
+            ) : (
+              'Отправить'
+            )}
+          </Button>
+          {calculationError && (
+            <p>
+              {typeof calculationError === 'string'
+                ? calculationError
+                : new Error(calculationError).message}
+            </p>
+          )}
+        </div>
         <AiSelectList />
       </CardFooter>
     </Card>
