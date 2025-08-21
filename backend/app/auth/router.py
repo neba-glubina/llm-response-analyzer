@@ -43,7 +43,7 @@ def authenticate_user(username: str, password: str) -> Optional[dict]:
 
 ATTEMPTS: Dict[str, List[int]] = {}
 MAX_ATTEMPTS = 5
-WINDOW_SEC = 300
+WINDOW_SEC = 30
 
 
 @router.post("/login", response_model=Token)
@@ -51,7 +51,7 @@ def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
 	# Проверка капчи (заглушка)
 	captcha_token = request.query_params.get("captcha_token") or request.headers.get("X-Captcha-Token")
 	if not captcha_token:
-		raise HTTPException(status_code=400, detail="Captcha required")
+		raise HTTPException(status_code=400, detail="captcha required")
 	# Здесь можно добавить реальную проверку капчи
 	ip = request.client.host if request.client else "unknown"
 	import time
@@ -63,11 +63,7 @@ def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
 
 	user = authenticate_user(form_data.username, form_data.password)
 	if not user:
-		raise HTTPException(
-			status_code=status.HTTP_401_UNAUTHORIZED,
-			detail="Incorrect username or password",
-			headers={"WWW-Authenticate": "Bearer"},
-		)
+		raise HTTPException(status_code=401, detail="invalid credentials")
 	access_token = create_access_token({"sub": user["username"], "role": user["role"]})
 	return {"access_token": access_token, "token_type": "bearer"}
 

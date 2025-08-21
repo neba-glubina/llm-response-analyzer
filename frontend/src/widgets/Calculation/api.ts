@@ -1,7 +1,8 @@
-import useSWRMutation from 'swr/mutation'
-import { useStore } from '@/store'
+import useSWRMutation from "swr/mutation";
+import { useStore } from "@/store";
+import { authFetch } from "@/lib/auth";
 
-const KEY = 'calculation'
+const KEY = "calculation";
 
 const fetcher = async (
   key: typeof KEY,
@@ -9,22 +10,26 @@ const fetcher = async (
     arg,
   }: {
     arg: {
-      requests: string[]
-      ais: string[]
-    }
-  },
+      requests: string[];
+      ais: string[];
+    };
+  }
 ) => {
-  console.log('key: ', key)
-  console.log('arg: ', arg)
+  console.log("key: ", key);
+  console.log("arg: ", arg);
 
-  // make http request
-
-  return null
-}
+  const res = await authFetch("/api/v1/tasks", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(arg),
+  });
+  if (!res.ok) throw new Error("Failed to start calculation");
+  return res.json();
+};
 
 export const useCalculation = () => {
-  const files = useStore(state => state.calculationSlice.files)
-  const storeAis = useStore(state => state.calculationSlice.ais)
+  const files = useStore((state) => state.calculationSlice.files);
+  const storeAis = useStore((state) => state.calculationSlice.ais);
 
   const {
     data: calculationData,
@@ -33,32 +38,32 @@ export const useCalculation = () => {
     reset: resetCalculation,
     trigger: triggerCalculationBase,
   } = useSWRMutation(KEY, fetcher, {
-    onSuccess: successData => {
+    onSuccess: (successData) => {
       // TODO: update store's list
-      console.log(successData)
+      console.log(successData);
     },
-  })
+  });
 
   const triggerCalculation = async () => {
     const requests = files
       ? Object.values(files)
-          .map(file => file.content)
+          .map((file) => file.content)
           .flat()
-      : []
+      : [];
 
-    const ais = storeAis ? Object.values(storeAis).map(ai => ai.value) : []
+    const ais = storeAis ? Object.values(storeAis).map((ai) => ai.value) : [];
 
     try {
       const result = await triggerCalculationBase({
         requests,
         ais,
-      })
-      return result
+      });
+      return result;
     } catch (error) {
-      console.error('Error during calculation:', error)
-      throw error
+      console.error("Error during calculation:", error);
+      throw error;
     }
-  }
+  };
 
   return {
     calculationData,
@@ -66,5 +71,5 @@ export const useCalculation = () => {
     calculationIsLoading,
     resetCalculation,
     triggerCalculation,
-  }
-}
+  };
+};
