@@ -12,25 +12,38 @@ OPENAI_API_KEY = settings.openai_api_key
 
 _openai_semaphore = asyncio.Semaphore(1)
 
+
+def _serialize_csv_row(fields: List[str], delimiter: str = ";;", line_ending: str = "\r\n") -> str:
+	out: List[str] = []
+	for v in fields:
+		s = "" if v is None else str(v)
+		needs_quote = ("\n" in s) or ("\r" in s) or ("\"" in s) or (delimiter in s)
+		if needs_quote:
+			s = '"' + s.replace('"', '""') + '"'
+		out.append(s)
+	return delimiter.join(out) + line_ending
+
+
 async def process_requests(requests: List[str], *, delay_seconds: float = 10.0, output_csv: str | None = None) -> None:
-	writer = None
 	f = None
 	if output_csv:
 		d = os.path.dirname(output_csv)
 		if d:
 			os.makedirs(d, exist_ok=True)
 		new_file = not os.path.exists(output_csv)
-		f = open(output_csv, "a", newline="", encoding="utf-8")
-		writer = csv.writer(f)
+		# Use UTF-8 with BOM; write lines manually to support multi-character delimiter (e.g., ';;').
+		mode = "w" if new_file else "a"
+		f = open(output_csv, mode, newline="", encoding="utf-8-sig")
 		if new_file:
-			writer.writerow(["index", "prompt", "answer"])
+			f.write(_serialize_csv_row(["index", "prompt", "answer"], delimiter=settings.csv_delimiter))
 	for i, q in enumerate(requests, start=1):
 		if not q or not str(q).strip():
 			continue
 		try:
 			ans = await ask_openai_with_web_search_tool(q)
-			if writer:
-				writer.writerow([i, q, ans])
+			if f:
+				line = _serialize_csv_row([str(i), q, ans], delimiter=settings.csv_delimiter)
+				f.write(line)
 				f.flush()
 				try:
 					os.fsync(f.fileno())
@@ -63,7 +76,6 @@ async def ask_openai_with_web_search_tool(prompt: str) -> str:
 				"Отвечай по-русски. Сначала дай подробный и структурированный итоговый ответ (список/абзацы), "
 				"после него на новой строке перечисли источники (каждая ссылка с новой строки)."
 			),
-			reasoning={"effort": "low"},
 			parallel_tool_calls=False,
 			max_tool_calls=1,
 			max_output_tokens=2048,

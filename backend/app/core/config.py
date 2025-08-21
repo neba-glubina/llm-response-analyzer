@@ -21,6 +21,9 @@ class Settings(BaseSettings):
 	uploads_dir: str = "storage/uploads"
 	reports_dir: str = "storage/reports"
 
+	# CSV output
+	csv_delimiter: str = Field(default=";;", alias="CSV_DELIMITER")
+
 	# CORS
 	cors_origins: List[str] = [
 		"http://localhost:5173",
@@ -29,7 +32,7 @@ class Settings(BaseSettings):
 
 	# OpenAI
 	openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
-	openai_model: str = Field(default="gpt-5-mini", alias="OPENAI_MODEL")
+	openai_model: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL")
 
 
 settings = Settings()
