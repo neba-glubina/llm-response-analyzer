@@ -45,19 +45,29 @@ export const useCalculation = () => {
   });
 
   const triggerCalculation = async () => {
-    const requests = files
-      ? Object.values(files)
-          .map((file) => file.content)
-          .flat()
-      : [];
+    const filesArr = files ? Object.values(files) : [];
+    const requests = filesArr.map((f) => f.content).flat();
 
     const ais = storeAis ? Object.values(storeAis).map((ai) => ai.value) : [];
 
     try {
-      const result = await triggerCalculationBase({
-        requests,
-        ais,
-      });
+      // Upload files first (optional, since we keep in memory for now)
+      if (filesArr.length > 0) {
+        const form = new FormData();
+        for (const f of filesArr) {
+          // Reconstruct a CSV blob from content lines
+          const csv = new Blob([f.content.join("\n")], { type: "text/csv" });
+          form.append("files", new File([csv], f.name, { type: "text/csv" }));
+        }
+        await authFetch("/api/v1/files/upload", {
+          method: "POST",
+          body: form,
+        });
+      }
+
+      const result = await triggerCalculationBase({ requests, ais });
+      // Optionally clear uploaded files after starting calculation
+      // removeFiles();
       return result;
     } catch (error) {
       console.error("Error during calculation:", error);

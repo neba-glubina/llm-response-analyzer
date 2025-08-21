@@ -4,7 +4,12 @@ from typing import List
 
 
 class Settings(BaseSettings):
-	model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=False)
+	model_config = SettingsConfigDict(
+		env_file=".env",
+		env_file_encoding="utf-8",
+		case_sensitive=False,
+		# extra="ignore",  # альтернативно можно игнорировать лишние ключи
+	)
 
 	app_name: str = "LLM Response Analyzer API"
 	jwt_secret_key: str = Field(default="change_me", alias="JWT_SECRET_KEY")
@@ -21,6 +26,10 @@ class Settings(BaseSettings):
 		"http://localhost:5173",
 		"http://127.0.0.1:5173",
 	]
+
+	# OpenAI
+	openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
+	openai_model: str = Field(default="gpt-5-mini", alias="OPENAI_MODEL")
 
 
 settings = Settings()

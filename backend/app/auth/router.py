@@ -103,11 +103,14 @@ def read_users_me(current_user: dict = Depends(get_current_user)):
 
 @router.get("/status")
 def auth_status(token: str | None = Depends(oauth2_scheme), access_token: str | None = Cookie(default=None, alias=COOKIE_NAME)):
-	token_value = token or access_token
-	payload = decode_access_token(token_value) if token_value else None
-	if payload is None:
+	try:
+		token_value = token or access_token
+		payload = decode_access_token(token_value) if token_value else None
+		if payload is None:
+			return {"authenticated": False}
+		return {"authenticated": True, "user": {"username": payload.get("sub"), "role": payload.get("role")}}
+	except Exception:
 		return {"authenticated": False}
-	return {"authenticated": True, "user": {"username": payload.get("sub"), "role": payload.get("role")}}
 
 
 @router.post("/logout_all")
