@@ -17,7 +17,10 @@ class Settings(BaseSettings):
 	reports_dir: str = "storage/reports"
 
 	# CORS
-	cors_origins: List[str] = ["*"]
+	cors_origins: List[str] = [
+		"http://localhost:5173",
+		"http://127.0.0.1:5173",
+	]
 
 
 settings = Settings()

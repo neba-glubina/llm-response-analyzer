@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useStore } from "@/store";
 
 export function LoginScreen() {
-  const setToken = useStore((s) => s.auth.setToken);
+  const setAuthenticated = useStore((s) => s.auth.setAuthenticated);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [captcha, setCaptcha] = useState("");
@@ -20,14 +20,14 @@ export function LoginScreen() {
   // OAuth2PasswordRequestForm requires grant_type=password
   params.set("grant_type", "password");
 
-      const res = await fetch(
-        `/api/v1/auth/login?captcha_token=${encodeURIComponent(captcha)}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: params.toString(),
-        }
-      );
+  const res = await fetch(`/api/v1/auth/login?captcha_token=${encodeURIComponent(captcha)}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: params.toString(),
+        credentials: "include",
+      });
 
       if (!res.ok) {
         let msg = "Login failed";
@@ -39,8 +39,8 @@ export function LoginScreen() {
         return;
       }
 
-  const data = await res.json();
-  setToken((data as any).access_token);
+  // Cookie is set by server; mark as authenticated
+  setAuthenticated(true);
     } catch {
       setError("Network error");
     } finally {

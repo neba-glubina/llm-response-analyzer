@@ -2,22 +2,22 @@ import { createSlice } from "@/store/utils";
 
 export interface AuthSlice {
   auth: {
-    token: string | null;
-    setToken: (token: string | null) => void;
+    isAuthenticated: boolean;
+    setAuthenticated: (v: boolean) => void;
     logout: () => void;
   };
 }
 
 export const authSlice = createSlice<AuthSlice>((set) => ({
   auth: {
-    token: null,
-    setToken: (token) =>
+    isAuthenticated: false,
+    setAuthenticated: (v) =>
       set((state) => {
-        state.auth.token = token;
+        state.auth.isAuthenticated = v;
       }),
     logout: () =>
       set((state) => {
-        state.auth.token = null;
+        state.auth.isAuthenticated = false;
       }),
   },
 }));

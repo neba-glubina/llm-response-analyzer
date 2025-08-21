@@ -1,5 +1,5 @@
 
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Response, Cookie
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from typing import Optional, Dict, List
 from ..schemas.auth import Token, UserLogin, TokenData
@@ -31,7 +31,7 @@ def load_users():
 
 fake_users_db = load_users()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
 
 def authenticate_user(username: str, password: str) -> Optional[dict]:
 	user = fake_users_db.get(username)
@@ -46,8 +46,12 @@ MAX_ATTEMPTS = 5
 WINDOW_SEC = 30
 
 
-@router.post("/login", response_model=Token)
-def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
+COOKIE_NAME = "access_token"
+COOKIE_MAX_AGE = 60 * 60 * 24  # 24 hours
+
+
+@router.post("/login")
+def login(response: Response, request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
 	# Проверка капчи (заглушка)
 	captcha_token = request.query_params.get("captcha_token") or request.headers.get("X-Captcha-Token")
 	if not captcha_token:
@@ -65,10 +69,22 @@ def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
 	if not user:
 		raise HTTPException(status_code=401, detail="invalid credentials")
 	access_token = create_access_token({"sub": user["username"], "role": user["role"]})
-	return {"access_token": access_token, "token_type": "bearer"}
+	# HttpOnly cookie; in dev Secure can be False for localhost
+	response.set_cookie(
+		key=COOKIE_NAME,
+		value=access_token,
+		max_age=COOKIE_MAX_AGE,
+		httponly=True,
+		secure=False,  # dev: localhost over http
+		samesite="lax",  # works with same-site (localhost:5173 -> proxy)
+		path="/",
+	)
+	return {"ok": True}
 
-def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
-	payload = decode_access_token(token)
+def get_current_user(token: str | None = Depends(oauth2_scheme), access_token: str | None = Cookie(default=None, alias=COOKIE_NAME)) -> dict:
+	# Prefer Authorization header; fallback to cookie
+	token_value = token or access_token
+	payload = decode_access_token(token_value) if token_value else None
 	if payload is None:
 		raise HTTPException(status_code=401, detail="Invalid token")
 	username: str = payload.get("sub")
@@ -85,9 +101,25 @@ def read_users_me(current_user: dict = Depends(get_current_user)):
 	return current_user
 
 
+@router.get("/status")
+def auth_status(token: str | None = Depends(oauth2_scheme), access_token: str | None = Cookie(default=None, alias=COOKIE_NAME)):
+	token_value = token or access_token
+	payload = decode_access_token(token_value) if token_value else None
+	if payload is None:
+		return {"authenticated": False}
+	return {"authenticated": True, "user": {"username": payload.get("sub"), "role": payload.get("role")}}
+
+
 @router.post("/logout_all")
 def logout_all(current_user: dict = Depends(get_current_user)):
 	if current_user.get("role") != "admin":
 		raise HTTPException(status_code=403, detail="Admin only")
 	ts = set_revoked_after_now()
 	return {"revoked_after": ts}
+
+
+@router.post("/logout")
+def logout(response: Response):
+	# Clear auth cookie
+	response.delete_cookie(key=COOKIE_NAME, path="/")
+	return {"ok": True}
